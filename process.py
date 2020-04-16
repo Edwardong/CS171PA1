@@ -1,6 +1,6 @@
 import re
 import argparse
-import client
+from client import Client
 import threading
 import queue
 import socket
@@ -30,24 +30,24 @@ shared_queue = queue.Queue()
 #         return ("send", receiver, message)
 
 #need to think about this more
-def start_process():
+def start_process(this_client):
     #where = ""
     while True:
         while shared_queue.empty():
             pass
         one_event = shared_queue.get()
+        #print(one_event)
         if one_event[:5] == "local":  # e.g. local Wakeup
             where = "local"
-            event = input[6:]
-            this_client.update_clock(1)
-            this_client.update_event("local: " + event)
+            event = one_event[6:]
+            this_client.update_clock(0)
+            this_client.update_events("local: " + event)
         elif one_event[:5] == "send":
             where = "remote"
-            receiver = input[5:7]
-            message = input[8:]
-            this_client.update_clock(1)
-            this_client.update("send: " + receiver + message)
-    return
+            receiver = one_event[5:7]
+            message = one_event[8:]
+            this_client.update_clock(0)
+            this_client.update_events("send: " + receiver + message)
 
 def send_msg(host,port,local_clock,msg):
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -79,16 +79,20 @@ if __name__ == '__main__':
     #port = arg.port
     this_pid = arg.pid
 
-    this_client = client(this_pid)
-    process_thread = threading.Thread(target=start_process, args=this_client)
+    this_client = Client(this_pid)
+    process_thread = threading.Thread(target=start_process, args=(this_client,))
+    process_thread.start()
 
     while True:
         one_event = input()
         if one_event[:5] == "print":
             this_client.print_clock()
+        elif one_event[:4] == "quit":
+            break
         else:
             shared_queue.put(one_event)
-
+    process_thread.join()
+    exit()
 
 
 

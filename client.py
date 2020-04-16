@@ -2,7 +2,7 @@ from typing import Dict, Any
 from collections import OrderedDict
 
 class Client:
-    event_queue: OrderedDict[int, str]
+    #event_queue: OrderedDict[int, str]
 
     def __init__(self, id):
         self.local_clock = 0
@@ -28,8 +28,9 @@ class Client:
             print("0")
         else:
             #all_event = [str(i) for i in [*self.event_queue].sort()]
-            print("P{} clock: {}.".format(self.client_id,self.event_queue)
-        return
+            print("P{} clock: {}.".format(self.client_id,self.event_queue))
+
+        return self.event_queue
 
     def get_pid(self):
         return self.client_id
