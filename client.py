@@ -28,7 +28,9 @@ class Client:
             print("0")
         else:
             #all_event = [str(i) for i in [*self.event_queue].sort()]
-            print("P{} clock: {}.".format(self.client_id,self.event_queue))
+            print("P{} clock:".format(self.client_id))
+            for e in self.event_queue:
+                print("[", e, "]", self.event_queue[e])
 
         return self.event_queue
 

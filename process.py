@@ -10,6 +10,7 @@ import sys
 P1PORT = 5001
 P2PORT = 5002
 P3PORT = 5003
+NETWORK_PORT = 5006
 
 shared_queue = queue.Queue()
 
@@ -77,18 +78,18 @@ def start_process(this_client, stop_signal):
             event = one_event[6:]
             this_client.update_clock(0)
             this_client.update_events("local: " + event)
-        elif one_event[:5] == "send":
+        elif one_event[:4] == "send":
             # where = "remote"
             receiver = one_event[5:7]
             message = one_event[8:]
             this_client.update_clock(0)
-            this_client.update_events("send: " + receiver + message)
-            send_msg("localhost", 5006, this_client.get_clock(), message, this_client.get_pid())
+            this_client.update_events("send: " + receiver + " " + message)
+            send_msg("localhost", NETWORK_PORT, this_client.get_clock(), message, this_client.get_pid(), receiver)
 
 
 def send_msg(host, port, local_clock, msg, sender, receiver):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    time.sleep(5)
+    # time.sleep(5)
     # communication process needs these
     # if receiver == "P1" or receiver == "p1":
     #     port = P1PORT
@@ -103,7 +104,9 @@ def send_msg(host, port, local_clock, msg, sender, receiver):
     # protocol(for easily parsing):
     # ClockreceiveSenderReceiverMsg
     # e.g.: 3receiveP1P2LetsDance
-    s.send(str(local_clock) + "receive" +  str(sender) + str(receiver) + msg)
+    payload = str(local_clock) + "receiveP" +  str(sender) + str(receiver) + msg
+    s.send(payload.encode('utf-8'))
+    print("sent.")
 
 
 if __name__ == '__main__':
