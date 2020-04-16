@@ -101,9 +101,9 @@ def send_msg(host, port, local_clock, msg, sender, receiver):
     #     return
     s.connect((host, port))
     # protocol(for easily parsing):
-    # receiveClockSenderReceiverMsg
-    # e.g.: receive3P1P2Let'sDance
-    s.send("receive" + str(local_clock) + str(sender) + str(receiver) + msg)
+    # ClockreceiveSenderReceiverMsg
+    # e.g.: 3receiveP1P2LetsDance
+    s.send(str(local_clock) + "receive" +  str(sender) + str(receiver) + msg)
 
 
 if __name__ == '__main__':
@@ -116,15 +116,16 @@ if __name__ == '__main__':
     process_stop = False
     listen_stop = False
 
-    if this_pid == 1:
-        port = P1PORT
-    elif this_pid == 2:
-        port = P2PORT
-    elif this_pid == 3:
-        port = P3PORT
-    else:
-        print("this program doesn't support more than 3 clients. Exiting")
-        exit()
+    # we might not need these here
+    # if this_pid == 1:
+    #     port = P1PORT
+    # elif this_pid == 2:
+    #     port = P2PORT
+    # elif this_pid == 3:
+    #     port = P3PORT
+    # else:
+    #     print("this program doesn't support more than 3 clients. Exiting")
+    #     exit()
 
     this_client = Client(this_pid)
     process_thread = threading.Thread(target=start_process, args=(this_client, lambda: process_stop))
