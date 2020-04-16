@@ -5,6 +5,7 @@ import threading
 import queue
 import socket
 import time
+import sys
 
 P1PORT = 5001
 P2PORT = 5002
@@ -30,13 +31,21 @@ shared_queue = queue.Queue()
 #         return ("send", receiver, message)
 
 #need to think about this more
-def start_process(this_client):
+def start_process(this_client,stop_signal):
     #where = ""
     while True:
         while shared_queue.empty():
-            pass
-        one_event = shared_queue.get()
-        #print(one_event)
+            if stop_signal():
+                break
+            else:
+                pass
+        if not shared_queue.empty():
+            one_event = shared_queue.get()
+        else:
+            break
+        # for debugging
+        #print("{} has poped from the shared queue: {}\n".format(one_event,shared_queue.queue))
+
         if one_event[:5] == "local":  # e.g. local Wakeup
             where = "local"
             event = one_event[6:]
@@ -78,9 +87,10 @@ if __name__ == '__main__':
     arg = parser.parse_args()
     #port = arg.port
     this_pid = arg.pid
+    process_stop = False
 
     this_client = Client(this_pid)
-    process_thread = threading.Thread(target=start_process, args=(this_client,))
+    process_thread = threading.Thread(target=start_process, args=(this_client,lambda:process_stop))
     process_thread.start()
 
     while True:
@@ -91,8 +101,15 @@ if __name__ == '__main__':
             break
         else:
             shared_queue.put(one_event)
+            # for debugging
+            #print("{} has appended in the shared queue: {}\n".format(one_event,shared_queue.queue))
+    # for debugging
+    #print("stop tracking keyboard input")
+    process_stop = True
     process_thread.join()
-    exit()
+
+
+    sys.exit()
 
 
 
