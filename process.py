@@ -16,6 +16,8 @@ shared_queue = queue.Queue()
 """ input format:
     local event_name
     send P_i event_name """
+
+
 # def process_str(input):
 #     rule = re.compile(r"[^a-zA-Z0-9]")
 #     message = ''
@@ -30,36 +32,62 @@ shared_queue = queue.Queue()
 #         message = input[8:]
 #         return ("send", receiver, message)
 
-#need to think about this more
-def start_process(this_client,stop_signal):
-    #where = ""
+def start_listen(port, stop_signal):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # host = socket.gethostname()
+    s.bind(('', port))
+    s.listen(5)
+    print("start listening")
+    while True:
+        if shared_queue.empty():
+            if stop_signal():
+                print("process exiting from 1")
+                break
+        c, addr = s.accept()
+        data = c.recv(1024)
+        print("can I receive data? Data: {}".format(data))
+        shared_queue.put(data)
+        c.close()
+        # else:
+        #     print("should stop listening2")
+        #     #c.close()
+        #     break
+    return
+
+
+# Finished with no deadlock
+def start_process(this_client, stop_signal):
     while True:
         while shared_queue.empty():
             if stop_signal():
+                #print("process exiting from 1")
                 break
             else:
                 pass
         if not shared_queue.empty():
             one_event = shared_queue.get()
         else:
+            #print("process exiting from 2")
             break
         # for debugging
-        #print("{} has poped from the shared queue: {}\n".format(one_event,shared_queue.queue))
+        print("{} has poped from the shared queue: {}\n".format(one_event,shared_queue.queue))
 
         if one_event[:5] == "local":  # e.g. local Wakeup
-            where = "local"
+            # where = "local"
             event = one_event[6:]
             this_client.update_clock(0)
             this_client.update_events("local: " + event)
         elif one_event[:5] == "send":
-            where = "remote"
+            # where = "remote"
             receiver = one_event[5:7]
             message = one_event[8:]
             this_client.update_clock(0)
             this_client.update_events("send: " + receiver + message)
+            send_msg("localhost", 5006, this_client.get_clock(), message, this_client.get_pid())
 
-def send_msg(host,port,local_clock,msg):
-    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+
+def send_msg(host, port, local_clock, msg, sender, receiver):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     time.sleep(5)
     # communication process needs these
     # if receiver == "P1" or receiver == "p1":
@@ -71,27 +99,38 @@ def send_msg(host,port,local_clock,msg):
     # else:
     #     print("error receiver id")
     #     return
-    s.connect((host,port))
-
-    s.send()
-
-
-
-
+    s.connect((host, port))
+    # protocol(for easily parsing):
+    # cloclSenderReceiverMsg
+    # e.g.: 3P1P4Let'sDance
+    s.send("receive" + str(local_clock) + str(sender) + str(receiver) + msg)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    #parser.add_argument('port',type=int)
+    # parser.add_argument('port',type=int)
     parser.add_argument('pid', type=int)
     arg = parser.parse_args()
-    #port = arg.port
+    # port = arg.port
     this_pid = arg.pid
     process_stop = False
+    listen_stop = False
+
+    if this_pid == 1:
+        port = P1PORT
+    elif this_pid == 2:
+        port = P2PORT
+    elif this_pid == 3:
+        port = P3PORT
+    else:
+        print("this program doesn't support more than 3 clients. Exiting")
+        exit()
 
     this_client = Client(this_pid)
-    process_thread = threading.Thread(target=start_process, args=(this_client,lambda:process_stop))
+    process_thread = threading.Thread(target=start_process, args=(this_client, lambda: process_stop))
     process_thread.start()
+    listen_thread = threading.Thread(target=start_listen, args=(port, lambda: listen_stop))
+    listen_thread.start()
 
     while True:
         one_event = input()
@@ -102,18 +141,14 @@ if __name__ == '__main__':
         else:
             shared_queue.put(one_event)
             # for debugging
-            #print("{} has appended in the shared queue: {}\n".format(one_event,shared_queue.queue))
+            # print("{} has appended in the shared queue: {}\n".format(one_event,shared_queue.queue))
     # for debugging
-    #print("stop tracking keyboard input")
+    # print("stop tracking keyboard input")
     process_stop = True
     process_thread.join()
 
-
-    sys.exit()
-
-
-
-
-
-
+    listen_stop = True
+    print("trying to join listen_thread")
+    listen_thread.join()
+    exit()
 
