@@ -101,7 +101,7 @@ def send_msg(host, port, local_clock, msg, sender, receiver):
     #     return
     s.connect((host, port))
     # protocol(for easily parsing):
-    # cloclSenderReceiverMsg
+    # receiveClockSenderReceiverMsg
     # e.g.: 3P1P4Let'sDance
     s.send("receive" + str(local_clock) + str(sender) + str(receiver) + msg)
 
