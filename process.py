@@ -102,7 +102,7 @@ def send_msg(host, port, local_clock, msg, sender, receiver):
     s.connect((host, port))
     # protocol(for easily parsing):
     # receiveClockSenderReceiverMsg
-    # e.g.: 3P1P4Let'sDance
+    # e.g.: receive3P1P2Let'sDance
     s.send("receive" + str(local_clock) + str(sender) + str(receiver) + msg)
 
 
@@ -129,8 +129,8 @@ if __name__ == '__main__':
     this_client = Client(this_pid)
     process_thread = threading.Thread(target=start_process, args=(this_client, lambda: process_stop))
     process_thread.start()
-    listen_thread = threading.Thread(target=start_listen, args=(port, lambda: listen_stop))
-    listen_thread.start()
+    #listen_thread = threading.Thread(target=start_listen, args=(port, lambda: listen_stop))
+    #listen_thread.start()
 
     while True:
         one_event = input()
@@ -147,8 +147,8 @@ if __name__ == '__main__':
     process_stop = True
     process_thread.join()
 
-    listen_stop = True
-    print("trying to join listen_thread")
-    listen_thread.join()
+    #listen_stop = True
+    #print("trying to join listen_thread")
+    #listen_thread.join()
     exit()
 
