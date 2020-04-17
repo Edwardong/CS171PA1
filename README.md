@@ -11,14 +11,20 @@ Sample message:
 3receiveP1P2LetsDance
 
 
+Launch process:
+
+`$python3 process.py <pid=1|2|3>`
+
+
 Input format:
 
-- print
+- `print`
 
-- local abcdef
+- `local <event>` 
+    
+  e.g. `local abcdef`
 
-- send P1 qwerty
+- `send P<pid> <event>` 
 
-- 
-
+  e.g. `send P1 qwerty`
 

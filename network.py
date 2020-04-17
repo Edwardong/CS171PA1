@@ -29,10 +29,9 @@ if __name__ == '__main__':
     
     # thread_list = []
     while(True):
-        print("listening")
         stream, addr = in_sock.accept()
         data = stream.recv(1000)
-        print(data)
+        # print(data)
         clock, sender, receiver, message = process_str(data.decode('utf-8'))
         sendtime = time.time()
         t = threading.Thread(target=send, args=(data,))
