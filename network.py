@@ -1,41 +1,41 @@
-import socket
-
-P1PORT = 5001
-P2PORT = 5002
-P3PORT = 5003
-NETWORK_PORT = 5006
+import socket, threading, time, random
+from public import P1PORT, P2PORT, P3PORT, NETWORK_PORT, process_str
 
 # protocol(for easily parsing):
     # ClockreceiveSenderReceiverMsg
     # e.g.: 3receiveP1P2LetsDance
-def process_str(msg):
-    sender_index = msg.find("P")
-    sender = msg[sender_index:sender_index+2]
-    receiver = msg[sender_index+2:sender_index+4]
-    receive_index = msg.find("receive")
-    clock = int(msg[0:receive_index])
-    message = msg[sender_index+4:]
-    return clock, sender, receiver, message
 
 
-# need to figure out the appropriate usage of Port
 if __name__ == '__main__':
-    print(process_str("3receiveP1P2LetsDance"))
 
     in_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     in_sock.bind(("localhost", NETWORK_PORT))
-    in_sock.listen(1)
+    in_sock.listen(5)
 
+    def send(data):
+        data_copy = data # not sure if necessary
+        clock, sender, receiver, message = process_str(data_copy.decode('utf-8'))
+        if receiver == "P1":
+            receiver_port = P1PORT
+        elif receiver == "P2":
+            receiver_port = P2PORT
+        elif receiver == "P3":
+            receiver_port = P3PORT
+        time.sleep(random.random() * 1 + 4)
+        out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        out_sock.connect(("localhost", receiver_port)) # safe. can have multi connections
+        out_sock.sendall(data)
+        out_sock.close
+    
+    # thread_list = []
     while(True):
         stream, addr = in_sock.accept()
         data = stream.recv(1000)
-        print(data)
-        print(process_str(data.decode('utf-8')))
-
-        # out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # out_sock.connect((HOST, P1PORT))
-        # out_sock.send_all
-
+        # print(data)
+        clock, sender, receiver, message = process_str(data.decode('utf-8'))
+        sendtime = time.time()
+        t = threading.Thread(target=send, args=(data,))
+        t.start()
 
     # init three threads(sockets) connecting to three clients,
     # each does the same thing: receive -> parse -> send
