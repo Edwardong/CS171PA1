@@ -43,8 +43,8 @@ def start_listen(port, stop_signal):
                 break
         c, addr = s.accept()
         data = c.recv(1024)
-        print("can I receive data? Data: {}".format(data))
-        print(data)
+        # print("can I receive data? Data: {}".format(data)) # debug
+        # print(data)
         shared_queue.put("recv " + data.decode('utf-8'))
         c.close()
         # else:
@@ -69,7 +69,7 @@ def start_process(this_client, stop_signal):
             #print("process exiting from 2")
             break
         # for debugging
-        print("{} has poped from the shared queue: {}\n".format(one_event,shared_queue.queue))
+        # print("{} has poped from the shared queue: {}\n".format(one_event,shared_queue.queue))
 
         if one_event[:5] == "local":  # e.g. local Wakeup
             # where = "local"
