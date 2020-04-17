@@ -27,7 +27,7 @@ if __name__ == '__main__':
         out_sock.sendall(data)
         out_sock.close
     
-    # thread_list = []
+    thread_list = []
     while(True):
         stream, addr = in_sock.accept()
         data = stream.recv(1000)
@@ -35,7 +35,12 @@ if __name__ == '__main__':
         clock, sender, receiver, message = process_str(data.decode('utf-8'))
         sendtime = time.time()
         t = threading.Thread(target=send, args=(data,))
+        thread_list.append(t)
         t.start()
 
     # init three threads(sockets) connecting to three clients,
     # each does the same thing: receive -> parse -> send
+
+    for t in thread_list:
+        t.join()
+        
