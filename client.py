@@ -31,7 +31,6 @@ class Client:
             print("P{} clock:".format(self.client_id))
             for e in self.event_queue:
                 print("[", e, "]", self.event_queue[e])
-
         return self.event_queue
 
     def get_pid(self):

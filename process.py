@@ -1,18 +1,15 @@
 import re
 import argparse
-from client import Client
 import threading
 import queue
 import socket
 import time
 import sys
-
-P1PORT = 5001
-P2PORT = 5002
-P3PORT = 5003
-NETWORK_PORT = 5006
+from client import Client
+from public import P1PORT, P2PORT, P3PORT, NETWORK_PORT, process_str
 
 shared_queue = queue.Queue()
+msg_queue = queue.Queue()
 
 """ input format:
     local event_name
@@ -47,7 +44,8 @@ def start_listen(port, stop_signal):
         c, addr = s.accept()
         data = c.recv(1024)
         print("can I receive data? Data: {}".format(data))
-        shared_queue.put(data)
+        print(data)
+        shared_queue.put("recv " + data.decode('utf-8'))
         c.close()
         # else:
         #     print("should stop listening2")
@@ -83,9 +81,13 @@ def start_process(this_client, stop_signal):
             receiver = one_event[5:7]
             message = one_event[8:]
             this_client.update_clock(0)
-            this_client.update_events("send: " + receiver + " " + message)
+            this_client.update_events("send " + receiver + ": " + message)
             send_msg("localhost", NETWORK_PORT, this_client.get_clock(), message, this_client.get_pid(), receiver)
-
+        elif one_event[:4] == "recv":
+            clock, sender, receiver, message = process_str(one_event[5:])
+            this_client.update_clock(clock)
+            this_client.update_events("receive " + sender + ": " + message)
+            
 
 def send_msg(host, port, local_clock, msg, sender, receiver):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,21 +122,21 @@ if __name__ == '__main__':
     listen_stop = False
 
     # we might not need these here
-    # if this_pid == 1:
-    #     port = P1PORT
-    # elif this_pid == 2:
-    #     port = P2PORT
-    # elif this_pid == 3:
-    #     port = P3PORT
-    # else:
-    #     print("this program doesn't support more than 3 clients. Exiting")
-    #     exit()
+    if this_pid == 1:
+        port = P1PORT
+    elif this_pid == 2:
+        port = P2PORT
+    elif this_pid == 3:
+        port = P3PORT
+    else:
+        print("this program doesn't support more than 3 clients. Exiting")
+        exit()
 
     this_client = Client(this_pid)
     process_thread = threading.Thread(target=start_process, args=(this_client, lambda: process_stop))
     process_thread.start()
-    #listen_thread = threading.Thread(target=start_listen, args=(port, lambda: listen_stop))
-    #listen_thread.start()
+    listen_thread = threading.Thread(target=start_listen, args=(port, lambda: listen_stop))
+    listen_thread.start()
 
     while True:
         one_event = input()
