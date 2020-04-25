@@ -41,16 +41,20 @@ def start_listen(port, stop_signal):
             if stop_signal():
                 print("process exiting from 1")
                 break
-        c, addr = s.accept()
-        data = c.recv(1024)
-        # print("can I receive data? Data: {}".format(data)) # debug
-        # print(data)
-        shared_queue.put("recv " + data.decode('utf-8'))
-        c.close()
-        # else:
-        #     print("should stop listening2")
-        #     #c.close()
-        #     break
+        s.settimeout(2.0)
+        try:
+            c, addr = s.accept()
+            data = c.recv(1024)
+            # print("can I receive data? Data: {}".format(data)) # debug
+            # print(data)
+            shared_queue.put("recv " + data.decode('utf-8'))
+            c.close()
+            # else:
+            #     print("should stop listening2")
+            #     #c.close()
+            #     break
+        except Exception:
+            pass
     return
 
 
@@ -153,8 +157,8 @@ if __name__ == '__main__':
     process_stop = True
     process_thread.join()
 
-    #listen_stop = True
-    #print("trying to join listen_thread")
-    #listen_thread.join()
+    listen_stop = True
+    # print("trying to join listen_thread")
+    listen_thread.join()
     exit()
 
